@@ -33,7 +33,7 @@ class GPTManager:
             print("Message removed")
 
 
-        print("[yellow]Prompting GPT...")
+        #print("[yellow]Prompting GPT...")
         response = self.client.chat.completions.create(model="gpt-4o", messages=self.chat_history)
 
         # Append response to the chat history
@@ -41,7 +41,7 @@ class GPTManager:
 
         # Display answer to user
         answer = response.choices[0].message.content
-        print(f"[green]\n{answer} \n")
+        #print(f"[green]\n{answer} \n")
         return answer
     
 # Quick debugging test

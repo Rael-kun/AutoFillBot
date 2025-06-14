@@ -1,6 +1,6 @@
 import re
 
-def vtt_to_txt(vtt_file, txt_file):
+def vtt_to_txt(vtt_file, txt_file=None):
     # regex to match <v Name> Spoken words </v>
     speaker_pattern = re.compile('<v\\s+([^>]+)>(.*?)</v>', re.DOTALL)
     # regex to match identifying id's that are hexidecimal and end with a chunk number
@@ -36,7 +36,7 @@ def vtt_to_txt(vtt_file, txt_file):
             if(',' in speaker):
                 parts = [p.strip() for p in speaker.split(',')]
                 # first and last name reversed in transcript
-                speaker = f"{parts[1]} {parts[0]}"
+                speaker = f'{parts[1]} {parts[0]}'
             # safety check so I don't go insane
             speech = speech.replace('\n', ' ').strip()
 
@@ -46,11 +46,19 @@ def vtt_to_txt(vtt_file, txt_file):
                 output[-1] += ' ' + speech
             else:
                 # new speaker, append to later seperate them and update last speaker
-                output.append(f"{speaker}: {speech}")
+                output.append(f'{speaker}: {speech}')
                 last_speaker = speaker
 
-    with open(txt_file, 'w', encoding='utf-8') as f:
-        f.write('\n\n'.join(output))
+    if(txt_file == None):
+        # send directly to next step
+        return '\n\n'.join(output)
+    else:
+        # save to file
+        with open(txt_file, 'w', encoding='utf-8') as f:
+            f.write('\n\n'.join(output))
 
-# Usage example
-vtt_to_txt(r'C:\Users\DSU\Research\GPTDOCs\Meeting with Weir, Nickolas.vtt', 'transcript_clean.txt')
+# test case
+if __name__ == '__main__':
+    transcript_name = r'C:\Users\DSU\Research\GPTDOCs\Meeting with Weir, Nickolas.vtt'
+    output_name = 'transcript_clean.txt'
+    vtt_to_txt(transcript_name, output_name)
