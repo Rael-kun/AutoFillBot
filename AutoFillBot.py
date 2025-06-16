@@ -1,11 +1,12 @@
 from FillInWord import fill_in_word
+from FillInWord import grab_sections
 import GPTManager
 from TeamsTranscript import vtt_to_txt
 
 # This uses our questions doc to fill out information. If false, model will use context
 # from the text before the answer to generate a response (may perform worse, but will be a
 # LOT more hands-off for generation)
-use_questions = True
+use_questions = False
 
 transcript_name = r"C:\Users\DSU\Research\GPTDOCs\Meeting with Weir, Nickolas.vtt"
 questions_name = r"C:\Users\DSU\Research\GPTDOCs\AutoFillBot\questions.txt"
@@ -38,9 +39,6 @@ if __name__ == "__main__" and use_questions:
         answer = gptManager.chat(question)
         answers.append(answer)
 
-#sanity check
-    with open("answers.txt", "w", encoding="utf-8") as f:
-        f.write("\n".join(answers))
 
     # Step 4: With answers, replace in word document
     fill_in_word(word_doc_name, output_name, answers)
@@ -48,5 +46,34 @@ if __name__ == "__main__" and use_questions:
     # Step 5: Profit
 
 elif __name__ == "__main__" and not use_questions:
-    # add functionality here
-    pass
+    # Step 0: Load our GPT and any other variables
+    gptManager = GPTManager.GPTManager()
+
+    questions = grab_sections(word_doc_name)
+    answers = []
+
+    # Step 1: Save transcript as text
+    transcript = vtt_to_txt(transcript_name)
+
+    # Step 2: Configure system prompt
+    base_prompt = """You are an assistant that completes sections of a document using only the 
+    provided interview transcript. For each section, use the transcript to fill in missing responses, 
+    answer questions, or elaborate naturally on the text. Do not use outside knowledge. Keep 
+    responses brief: 1–2 sentences or up to 3 bullet points. Use the tone and language of the 
+    transcript. Do not invent information. Only include information clearly found or reasonably 
+    inferred from the transcript. If no relevant info is found, respond with: "No relevant 
+    information found in transcript. Here is the transcript:\n"""
+
+    
+    sys_prompt = {"role": "system", "content": base_prompt + transcript}
+    gptManager.chat_history.append(sys_prompt)
+
+    # Step 3: Now run GPT and get back answers
+    for question in questions:
+        answer = gptManager.chat(question)
+        answers.append(answer)
+
+    # Step 4: With answers, replace in word document
+    fill_in_word(word_doc_name, output_name, answers)
+
+    # Step 5: Wowee look at those profits rise :O
