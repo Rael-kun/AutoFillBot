@@ -1,5 +1,6 @@
 from FillInWord import fill_in_word
 from FillInWord import grab_sections
+from FillInWord import grab_n_shot
 import GPTManager
 from TeamsTranscript import vtt_to_txt
 
@@ -7,10 +8,17 @@ from TeamsTranscript import vtt_to_txt
 # from the text before the answer to generate a response (may perform worse, but will be a
 # LOT more hands-off for generation)
 use_questions = False
+# If this is true, uses num_examples of the n_shot examples defined in FillInWord.py. These
+# examples can enhance the performance of this bot substantially, and help the bot figure out
+# the format you want it to respond in. If false, no examples will be used, and you can leave
+# the n_shot_doc_name as None.
+use_n_shot = False
+num_examples = 3
 
 transcript_name = r"C:\Users\DSU\Research\GPTDOCs\Meeting with Weir, Nickolas.vtt"
 questions_name = r"C:\Users\DSU\Research\GPTDOCs\AutoFillBot\questions.txt"
 word_doc_name = r"C:\Users\DSU\Research\GPTDOCs\AutoFillBot\AppleDoc.docx"
+n_shot_doc_name = r"C:\Users\DSU\Research\GPTDOCs\AutoFillBot\N_shot_examples.docx"
 output_name = "AppleFinished.docx"
 
 if __name__ == "__main__" and use_questions:
@@ -31,7 +39,11 @@ if __name__ == "__main__" and use_questions:
                 use only the information in the given document. Based only on the provided 
                 transcript, extract the answer to the questions below. Here it is:\n"""
     
-    sys_prompt = {"role": "system", "content": base_prompt + transcript}
+    n_shot_examples = ""
+    if(use_n_shot):
+        n_shot_examples = "Here are some examples of sections you may see and how you should respond:" + grab_n_shot(n_shot_doc_name, num_examples)
+    
+    sys_prompt = {"role": "system", "content": base_prompt + transcript + n_shot_examples}
     gptManager.chat_history.append(sys_prompt)
 
     # Step 3: Now run GPT and get back answers
@@ -64,8 +76,11 @@ elif __name__ == "__main__" and not use_questions:
     inferred from the transcript. If no relevant info is found, respond with: "No relevant 
     information found in transcript. Here is the transcript:\n"""
 
+    n_shot_examples = ""
+    if(use_n_shot):
+        n_shot_examples = "Here are some examples of sections you may see and how you should respond:" + grab_n_shot(n_shot_doc_name, num_examples)
     
-    sys_prompt = {"role": "system", "content": base_prompt + transcript}
+    sys_prompt = {"role": "system", "content": base_prompt + transcript + n_shot_examples}
     gptManager.chat_history.append(sys_prompt)
 
     # Step 3: Now run GPT and get back answers
