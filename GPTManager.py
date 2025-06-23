@@ -1,12 +1,24 @@
 from openai import OpenAI
+from openai import AzureOpenAI
 from rich import print
 import os
 from dotenv import load_dotenv
 
+# If using_azure, then use the Azure OpenAI API as the model. Else, use ChatGPT API.
+using_azure = True
+
+
 load_dotenv("keys.env")
 # API Key here
-gpt_key = os.getenv("GPT_KEY")
-print("Loaded key:", gpt_key is not None) 
+if(using_azure):
+    api_key = os.getenv("AZURE_KEY")
+    azure_endpoint = "https://azureapi-test.openai.azure.com/"
+else:
+    api_key = os.getenv("GPT_KEY")
+print("Loaded key:", api_key is not None) 
+
+# model to use (I have gpt-4o and gpt-4o-mini configured)
+model = "gpt-4o-mini"
 
 class GPTManager:
     def __init__(self):
@@ -15,7 +27,10 @@ class GPTManager:
         self.chat_history = []
         # open API
         try:
-            self.client = OpenAI(api_key=gpt_key)
+            if(using_azure):
+                self.client = AzureOpenAI(azure_endpoint=azure_endpoint, api_key=api_key, api_version="2025-04-01-preview")
+            else:
+                self.client = OpenAI(api_key=api_key)
         except TypeError:
             print("Error, you probably forgot the API key.")
 
@@ -34,7 +49,7 @@ class GPTManager:
 
 
         #print("[yellow]Prompting GPT...")
-        response = self.client.chat.completions.create(model="gpt-4o", messages=self.chat_history)
+        response = self.client.chat.completions.create(model=model, messages=self.chat_history)
 
         # Append response to the chat history
         self.chat_history.append({"role": response.choices[0].message.role, "content": response.choices[0].message.content})
